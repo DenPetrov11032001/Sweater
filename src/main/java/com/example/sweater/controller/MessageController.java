@@ -5,6 +5,7 @@ import com.example.sweater.domain.User;
 import com.example.sweater.domain.dto.MessageDto;
 import com.example.sweater.repository.MessageRepository;
 import com.example.sweater.service.MessageService;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -67,7 +68,8 @@ public class MessageController {
             @Valid Message message,
             BindingResult bindingResult,
             Model model,
-            @RequestParam("file") MultipartFile file
+            @RequestParam("file") MultipartFile file,
+            @PageableDefault(sort = { "id" }, direction = Sort.Direction.DESC) Pageable pageable
     ) throws IOException {
         message.setAuthor(user);
 
@@ -84,9 +86,14 @@ public class MessageController {
             messageRepository.save(message);
         }
 
-        Iterable<Message> messages = messageRepository.findAll();
+        val messages = messageRepository.findAll();
 
+        Page<MessageDto> page = messageService.messageList(pageable, null, user);
+
+        model.addAttribute("page", page);
+        model.addAttribute("url", "/main");
         model.addAttribute("messages", messages);
+        model.addAttribute("filter", null);
 
         return "main";
     }
